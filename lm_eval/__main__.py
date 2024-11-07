@@ -16,7 +16,6 @@ from lm_eval.logging_utils import WandbLogger
 from lm_eval.tasks import TaskManager
 from lm_eval.utils import make_table, simple_parse_args_string
 
-
 DEFAULT_RESULTS_FILE = "results.json"
 
 
@@ -71,6 +70,18 @@ def setup_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument(
         "--model", "-m", type=str, default="hf", help="Name of model e.g. `hf`"
+    )
+    parser.add_argument(
+        "--token",
+        type=str,
+        default=None,
+        help="Token for accessing pcloud repo"
+    )
+    parser.add_argument(
+        "--repo_code",
+        type=str,
+        default=None,
+        help="Token for accessing pcloud repo"
     )
     parser.add_argument(
         "--tasks",
@@ -178,6 +189,12 @@ def setup_parser() -> argparse.ArgumentParser:
         action="store_true",
         default=False,
         help="If True, write out all model outputs and documents for per-sample measurement and post-hoc analysis. Use with --output_path.",
+    )
+    parser.add_argument(
+        "--cloud",
+        action="action_true",
+        default=False,
+        help="Determine whether local repository or cloud repository will be used"
     )
     parser.add_argument(
         "--show_config",
@@ -398,21 +415,41 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
                     wandb_logger.log_eval_samples(samples)
             except Exception as e:
                 eval_logger.info(f"Logging to Weights and Biases failed due to {e}")
+        if args.cloud:
+            try:
+                nested_lm_eval_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+    
+                # Temporarily add the nested lm_eval directory to sys.path
+                sys.path.insert(0, nested_lm_eval_dir)
+                from src._pcloud_repo import PCloudRepository
+                # repo.add_results(df, file_name="results_test_1.csv")
+                repo = PCloudRepository(
+                            repo_code=args.repo_code, 
+                            token=args.token
+                        )
+            except Exception as e:
+                print(f"Error occurred while loading repo code: {e}")
+            finally:
+                # Remove the nested lm_eval directory from sys.path
+                sys.path.pop(0)
+            print("Pcloud loaded!")
+            # saving to cloud repository
+            pass
+        else:
+            if args.output_path:
+                output_path_file.open("w", encoding="utf-8").write(dumped)
 
-        if args.output_path:
-            output_path_file.open("w", encoding="utf-8").write(dumped)
-
-            if args.log_samples:
-                for task_name, config in results["configs"].items():
-                    output_name = f"{task_name}_results"
-                    filename = path.joinpath(f"{output_name}.jsonl")
-                    samples_dumped = json.dumps(
-                        samples[task_name],
-                        indent=2,
-                        default=_handle_non_serializable,
-                        ensure_ascii=False,
-                    )
-                    filename.write_text(samples_dumped, encoding="utf-8")
+                if args.log_samples:
+                    for task_name, config in results["configs"].items():
+                        output_name = f"{task_name}_results"
+                        filename = path.joinpath(f"{output_name}.jsonl")
+                        samples_dumped = json.dumps(
+                            samples[task_name],
+                            indent=2,
+                            default=_handle_non_serializable,
+                            ensure_ascii=False,
+                        )
+                        filename.write_text(samples_dumped, encoding="utf-8")
 
         print(
             f"{args.model} ({args.model_args}), gen_kwargs: ({args.gen_kwargs}), limit: {args.limit}, num_fewshot: {args.num_fewshot}, "
