@@ -192,7 +192,7 @@ def setup_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--cloud",
-        action="action_true",
+        action="store_true",
         default=False,
         help="Determine whether local repository or cloud repository will be used"
     )
