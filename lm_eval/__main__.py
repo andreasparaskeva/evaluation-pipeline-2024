@@ -422,11 +422,29 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
                 # Temporarily add the nested lm_eval directory to sys.path
                 sys.path.insert(0, nested_lm_eval_dir)
                 from src._pcloud_repo import PCloudRepository
-                # repo.add_results(df, file_name="results_test_1.csv")
-                repo = PCloudRepository(
-                            repo_code=args.repo_code, 
-                            token=args.token
-                        )
+                if args.output_path:
+                    repo = PCloudRepository(
+                                repo_code=args.repo_code, 
+                                token=args.token
+                            )
+                    # Dumping the primary output as JSONL and uploading
+                    primary_results = json.loads(dumped)  # Convert string to JSON for consistency
+                    repo.add_jsonl_results(primary_results, "main_output.jsonl")
+
+                    if args.log_samples:
+                        # Uploading individual task results as JSONL
+                        for task_name, config in results["configs"].items():
+                            output_name = f"{task_name}_results.jsonl"
+                            
+                            # Preparing individual samples as JSON objects to be uploaded as JSONL
+                            task_samples = json.loads(
+                                json.dumps(
+                                    samples[task_name],
+                                    default=_handle_non_serializable,
+                                    ensure_ascii=False
+                                )
+                            )
+                            repo.add_jsonl_results(task_samples, output_name)
             except Exception as e:
                 print(f"Error occurred while loading repo code: {e}")
             finally:
