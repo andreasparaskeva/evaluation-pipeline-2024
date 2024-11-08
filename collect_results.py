@@ -8,7 +8,7 @@ TEXT_TASKS = {
     "glue": ["cola", "sst2", "mrpc", "qqp", "mnli", "mnli-mm", "qnli", "rte",
              "boolq", "multirc", "wsc"],
     # Lots of BLiMP tasks – use verifier function below to see if you've included everything.
-    "blimp": [taskname.split(".jsonl")[0] for taskname in os.listdir("evaluation_data/blimp_filtered/")],
+    "blimp": [taskname.split(".jsonl")[0] for taskname in os.listdir("evaluation_data/blimp")],
     "blimp_supplement": ["hypernym", "qa_congruence_easy", "qa_congruence_tricky",
                    "subject_aux_inversion", "turn_taking"],
     "ewok": ["agent-properties", "material-dynamics", "material-properties", "physical-dynamics",
