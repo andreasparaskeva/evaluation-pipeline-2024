@@ -429,12 +429,12 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
                             )
                     # Dumping the primary output as JSONL and uploading
                     primary_results = json.loads(dumped)  # Convert string to JSON for consistency
-                    repo.add_jsonl_results(primary_results, "main_output.jsonl")
+                    repo.add_jsonl_results(primary_results, args.output_path)
 
                     if args.log_samples:
                         # Uploading individual task results as JSONL
                         for task_name, config in results["configs"].items():
-                            output_name = f"{task_name}_results.jsonl"
+                            output_name = f"{args.output_path}/{task_name}_results.jsonl"
                             
                             # Preparing individual samples as JSON objects to be uploaded as JSONL
                             task_samples = json.loads(
@@ -451,8 +451,6 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
                 # Remove the nested lm_eval directory from sys.path
                 sys.path.pop(0)
             print("Pcloud loaded!")
-            # saving to cloud repository
-            pass
         else:
             if args.output_path:
                 output_path_file.open("w", encoding="utf-8").write(dumped)
