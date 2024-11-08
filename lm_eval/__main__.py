@@ -429,7 +429,7 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
                             )
                     # Dumping the primary output as JSONL and uploading
                     primary_results = json.loads(dumped)  # Convert string to JSON for consistency
-                    repo.add_jsonl_results(primary_results, args.output_path)
+                    repo.add_json_results(primary_results, args.output_path)
 
                     if args.log_samples:
                         # Uploading individual task results as JSONL
